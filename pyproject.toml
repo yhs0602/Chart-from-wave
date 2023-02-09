@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "wav-to-chart"
+version = "0.1.0"
+description = ""
+authors = ["KYHSGeekCode <jourhyang123@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+torch = "^1.13.1"
+librosa = "^0.9.2"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
