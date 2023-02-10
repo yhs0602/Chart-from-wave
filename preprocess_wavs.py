@@ -54,6 +54,7 @@ def save_feature_map_as_numpy(feature_map, file_path):
 #     save_feature_map(feature_map, "wave_feature_map.pkl")
 #     print(feature_map.keys())
 
+
 def pad_sequences():
     # Load the pickled file
     with open("wave_feature_map.pkl", "rb") as f:
@@ -68,15 +69,13 @@ def pad_sequences():
     for key, value in zip(data.keys(), padded_sequences):
         print(key, value.shape)
     list_padded_sequences = list(padded_sequences)
-    padded_data = dict({
-        key: value for key, value in zip(data.keys(), list_padded_sequences)
-    })
-    dieted_data = {
-        key: torch.tensor(value.T) for key, value in padded_data.items()
-    }
+    padded_data = dict(
+        {key: value for key, value in zip(data.keys(), list_padded_sequences)}
+    )
+    dieted_data = {key: torch.tensor(value.T) for key, value in padded_data.items()}
     save_feature_map(dieted_data, "padded_wave_feature_map.pkl")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
     # pad_sequences()
