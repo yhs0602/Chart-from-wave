@@ -4,7 +4,7 @@
 # + (one-hot encoded flick direction) : 5 x 2 dimensions
 # + (one-hot-encoded holding group information) : 0: no group, 1: group 1, 2: group 2; 3 x 2 = 6 dimensions
 # Total: 5 + 5 + 10 + 6 = 26 dimensions for deresute
-
+import collections
 import json
 
 import numpy as np
@@ -56,9 +56,7 @@ def convert_to_timing_lattice(notes, bpm, resolution):
     return np.array(note_vectors)
 
 
-def json_to_numpy(file_path):
-    with open(file_path, "r") as f:
-        data = json.load(f)
+def json_to_numpy(data):
     notes = data["notes"]
     bpm = data["metadata"].get("bpm", 120)
     resolution = 4
@@ -66,7 +64,50 @@ def json_to_numpy(file_path):
     return features
 
 
+def approximate_bpm(timings):
+    timings_int = np.round(timings * 1000).astype(int)
+    differences = [
+        timings_int[i + 1] - timings_int[i] for i in range(timings_int.size - 1)
+    ]
+    nonzero_differences = [d for d in differences if d > 0]
+    intervals = cluster_to_get_bpm(nonzero_differences)
+    counter = collections.Counter(intervals)
+    approximated_interval = min(counter.most_common(3))
+    bpm = 60000 / approximated_interval[0]
+    return int(bpm)
+
+
+def cluster_to_get_bpm(timings):
+    from sklearn.cluster import DBSCAN
+    import numpy as np
+
+    X = np.array(timings).reshape(-1, 1)
+
+    dbscan = DBSCAN(eps=1.0, min_samples=1)
+    clusters = dbscan.fit_predict(X)
+
+    cluster_modes = [
+        int(np.mean(X[clusters == i])) for i in np.unique(clusters) if i != -1
+    ]
+    cluster_modes = np.array(cluster_modes).reshape(-1, 1)
+
+    result = np.zeros_like(X)
+
+    for i, cluster_mode in enumerate(cluster_modes):
+        result[np.isin(clusters, i)] = cluster_mode
+
+    return result.flatten().tolist()
+
+
+# timings = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
+# bpm = approximate_bpm(timings)
+# print("Approximated BPM:", bpm)
+
 if __name__ == "__main__":
-    file_path = "/Users/yanghyeonseo/gitprojects/dataset20220330/twFiles7/5031___Lunatic Show___MasterPlus"
-    features = json_to_numpy(file_path)
-    print(features.shape)
+    file_path = "5031___Lunatic Show___MasterPlus"
+    with open(file_path, "r") as f:
+        data = json.load(f)
+    timings = np.array([note["Time"] for note in data["notes"]])
+    print(timings)
+    bpm = approximate_bpm(timings)
+    print(bpm)
