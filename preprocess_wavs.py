@@ -4,6 +4,7 @@ import pickle
 import librosa
 import numpy as np
 import torch
+from torch.nn.utils.rnn import pad_sequence
 
 
 def extract_features(wav_file, sr=44100):
@@ -27,14 +28,6 @@ def extract_features(wav_file, sr=44100):
     return features
 
 
-def extract_features_usage():
-    # Example usage
-    features = extract_features(
-        "/Users/yanghyeonseo/gitprojects/dataset20220330/music/song_8037.wav"
-    )
-    print("Shape of extracted features:", features.shape)
-
-
 def get_feature_map(dir_path):
     feature_map = {}
     for filename in os.listdir(dir_path):
@@ -51,8 +44,39 @@ def save_feature_map(feature_map, file_path):
         pickle.dump(feature_map, f)
 
 
-if __name__ == "__main__":
-    dir_path = "/Users/yanghyeonseo/gitprojects/dataset20220330/music"
-    feature_map = get_feature_map(dir_path)
-    save_feature_map(feature_map, "wave_feature_map.pkl")
-    print(feature_map.keys())
+def save_feature_map_as_numpy(feature_map, file_path):
+    np.save(file_path, feature_map)
+
+
+# if __name__ == "__main__":
+#     dir_path = "/Users/yanghyeonseo/gitprojects/dataset20220330/music"
+#     feature_map = get_feature_map(dir_path)
+#     save_feature_map(feature_map, "wave_feature_map.pkl")
+#     print(feature_map.keys())
+
+def pad_sequences():
+    # Load the pickled file
+    with open("wave_feature_map.pkl", "rb") as f:
+        data = pickle.load(f)
+    for key, value in data.items():
+        print(key, value.shape)
+    # Pad the sequences
+    padded_sequences = pad_sequence(
+        [value.T for value in data.values()], batch_first=True, padding_value=0
+    )
+    print(padded_sequences.shape, type(padded_sequences))
+    for key, value in zip(data.keys(), padded_sequences):
+        print(key, value.shape)
+    list_padded_sequences = list(padded_sequences)
+    padded_data = dict({
+        key: value for key, value in zip(data.keys(), list_padded_sequences)
+    })
+    dieted_data = {
+        key: torch.tensor(value.T) for key, value in padded_data.items()
+    }
+    save_feature_map(dieted_data, "padded_wave_feature_map.pkl")
+
+
+if __name__ == '__main__':
+    pass
+    # pad_sequences()
