@@ -72,9 +72,22 @@ def approximate_bpm(timings):
     nonzero_differences = [d for d in differences if d > 0]
     intervals = cluster_to_get_bpm(nonzero_differences)
     counter = collections.Counter(intervals)
+    print(counter)
     approximated_interval = min(counter.most_common(3))
     bpm = 60000 / approximated_interval[0]
     return int(bpm)
+
+
+def approximate_bpm_by_average(timings):
+    timings_int = timings  # np.round(timings)
+    differences = [
+        timings_int[i + 1] - timings_int[i] for i in range(timings_int.size - 1)
+    ]
+    nonzero_differences = [d for d in differences if d > 0]
+    print([v * 290 for v in nonzero_differences])
+    approximated_interval = np.mean(nonzero_differences)
+    print(approximated_interval)
+    return int(60000000 / approximated_interval)
 
 
 def cluster_to_get_bpm(timings):
@@ -103,7 +116,8 @@ def cluster_to_get_bpm(timings):
 # bpm = approximate_bpm(timings)
 # print("Approximated BPM:", bpm)
 
-if __name__ == "__main__":
+
+def main():
     file_path = "5031___Lunatic Show___MasterPlus"
     with open(file_path, "r") as f:
         data = json.load(f)
@@ -111,3 +125,25 @@ if __name__ == "__main__":
     print(timings)
     bpm = approximate_bpm(timings)
     print(bpm)
+    bpm = approximate_bpm_by_average(timings)
+    print(bpm)
+
+
+def main2():
+    file_path = "5031___Lunatic Show___MasterPlus"
+    with open(file_path, "r") as f:
+        data = json.load(f)
+    timings = np.array([note["Time"] for note in data["notes"]])
+    bpm = input("BPM: ")
+    bpm = int(bpm)
+    normalized_timings = np.round(
+        [(timing - timings[0]) * bpm for timing in timings]
+    ).astype(int)
+    print(normalized_timings)
+
+
+if __name__ == "__main__":
+    # main()
+    main2()
+
+# given music_data, one can determine the original bpm of the live music.
